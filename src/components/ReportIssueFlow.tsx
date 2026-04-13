@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import API from "../services/api";
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -157,21 +158,44 @@ export function ReportIssueFlow({ onBack, onComplete }: ReportIssueFlowProps) {
     setStep(4);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsVerifying(true);
     setVerificationStep(0);
-
-    // Create the issue object
+  
     const newIssue = {
       title: `${selectedCategory} Issue`,
       description: description || 'User reported issue requiring attention',
       category: selectedCategory,
       status: 'pending' as const,
-      image: selectedImage || 'https://images.unsplash.com/photo-1591080954453-2936efa54c5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBzdHJlZXQlMjBwb3Rob2xlJTIwcm9hZHxlbnwxfHx8fDE3NTczOTQwMTZ8MA&ixlib=rb-4.1.0&q=80&w=1080',
+      image: selectedImage || '',
       location: currentLocation
     };
-
-    // Simulate verification process
+  
+    try {
+      // 🔥 BACKEND CALL
+      const formData = new FormData();
+  
+      formData.append("title", newIssue.title);
+      formData.append("description", newIssue.description);
+      formData.append("category", newIssue.category);
+      formData.append("address", currentLocation);
+  
+      // dummy lat/lng (we’ll improve later)
+      formData.append("latitude", "12.9716");
+      formData.append("longitude", "77.5946");
+  
+      // image (if exists)
+      if (selectedImage) {
+        formData.append("images", selectedImage);
+      }
+  
+      await API.post("/issues", formData);
+  
+    } catch (err) {
+      console.error("Backend failed, saving locally");
+    }
+  
+    // ✅ ALWAYS run your existing animation + local add
     const interval = setInterval(() => {
       setVerificationStep((prev) => {
         if (prev < verificationSteps.length - 1) {
@@ -179,8 +203,7 @@ export function ReportIssueFlow({ onBack, onComplete }: ReportIssueFlowProps) {
         } else {
           clearInterval(interval);
           setTimeout(() => {
-            // Add the issue to context before completing
-            addIssue(newIssue);
+            addIssue(newIssue); // 👈 KEEP THIS (important)
             setIsVerifying(false);
             onComplete();
           }, 2000);

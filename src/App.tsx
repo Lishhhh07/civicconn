@@ -29,6 +29,13 @@ type Screen =
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('landing');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+  
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
   const { 
     notifications, 
     addNotification, 
@@ -49,8 +56,14 @@ export default function App() {
   // Remove auto notifications - only show when reporting issues or accessing notification tab
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
-    setCurrentScreen('home');
+    const token = localStorage.getItem("token");
+  
+    if (token) {
+      setIsLoggedIn(true);
+      setCurrentScreen('home');
+    } else {
+      alert("Login failed");
+    }
   };
 
   const handleLogout = () => {
