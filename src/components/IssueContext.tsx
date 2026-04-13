@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
+import API from "../services/api";
 export interface Issue {
   id: string;
   title: string;
@@ -29,24 +29,38 @@ export function IssueProvider({ children }: { children: ReactNode }) {
 
   // Load issues from localStorage on mount
   useEffect(() => {
-    const savedIssues = localStorage.getItem(STORAGE_KEY);
-    if (savedIssues) {
+    const loadIssues = async () => {
       try {
-        const parsedIssues = JSON.parse(savedIssues);
-        // Sort by reportedDate descending (most recent first)
-        const sortedIssues = parsedIssues.sort((a: Issue, b: Issue) => 
-          new Date(b.reportedDate).getTime() - new Date(a.reportedDate).getTime()
-        );
-        setIssues(sortedIssues);
-      } catch (error) {
-        console.error('Error loading issues from localStorage:', error);
-        // Initialize with default issues if localStorage is corrupted
+        // 🔥 Try backend first
+        const res = await API.get("/issues/user/me");
+  
+        if (res.data && res.data.length > 0) {
+          setIssues(res.data);
+          return;
+        }
+      } catch (err) {
+        console.error("Backend failed, using local data");
+      }
+  
+      // 🔁 Fallback to localStorage
+      const savedIssues = localStorage.getItem(STORAGE_KEY);
+      if (savedIssues) {
+        try {
+          const parsedIssues = JSON.parse(savedIssues);
+          const sortedIssues = parsedIssues.sort((a: Issue, b: Issue) =>
+            new Date(b.reportedDate).getTime() - new Date(a.reportedDate).getTime()
+          );
+          setIssues(sortedIssues);
+        } catch (error) {
+          console.error("Error loading local issues:", error);
+          initializeDefaultIssues();
+        }
+      } else {
         initializeDefaultIssues();
       }
-    } else {
-      // Initialize with default issues if no localStorage data
-      initializeDefaultIssues();
-    }
+    };
+  
+    loadIssues();
   }, []);
 
   // Save to localStorage whenever issues change
