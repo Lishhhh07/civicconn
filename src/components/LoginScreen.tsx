@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import API from "../services/api";
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -22,12 +23,27 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
     setStep(2);
   };
 
-  const handleVerifyOTP = () => {
-    // Simulate OTP verification
-    setTimeout(() => {
-      onLogin();
-    }, 1000);
-  };
+
+
+const handleVerifyOTP = async () => {
+  try {
+    // TEMP: convert mobile → fake email (since backend needs email)
+    const email = `${mobileNumber}@test.com`;
+    const password = "123456"; // temp password
+
+    const res: any = await API.post("/auth/login", {
+      email,
+      password,
+    });
+
+    localStorage.setItem("token", res.data.token);
+
+    onLogin(); // keep existing flow
+  } catch (err: any) {
+    console.error(err);
+    alert("Login failed");
+  }
+};
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -231,7 +247,23 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
                       </div>
 
                       <Button
-                        onClick={onLogin}
+                        onClick={async () => {
+  try {
+    const email = `${mobileNumber}@test.com`;
+    const password = "123456";
+
+    await API.post("/auth/register", {
+      name: "User",
+      email,
+      password,
+    });
+
+    onLogin();
+  } catch (err: any) {
+    console.error(err);
+    alert("Signup failed");
+  }
+}}
                         className="w-full bg-gradient-to-r from-orange-500 to-cyan-400 hover:from-orange-600 hover:to-cyan-500 text-white rounded-xl py-3 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         Create Account
