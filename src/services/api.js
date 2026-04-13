@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://civicconn--lishikameghani.replit.app/api",
-});
+    baseURL: "https://civicconn-production.up.railway.app/api",
+  });
 
 // Attach token
 API.interceptors.request.use((req) => {
