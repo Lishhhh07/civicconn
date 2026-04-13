@@ -247,23 +247,37 @@ const handleVerifyOTP = async () => {
                       </div>
 
                       <Button
-                        onClick={async () => {
-  try {
-    const email = `${mobileNumber}@test.com`;
-    const password = "123456";
-
-    await API.post("/auth/register", {
-      name: "User",
-      email,
-      password,
-    });
-
-    onLogin();
-  } catch (err: any) {
-    console.error(err);
-    alert("Signup failed");
-  }
-}}
+                       
+                       onClick={async () => {
+                        try {
+                          const email = `${mobileNumber}@test.com`;
+                          const password = "123456";
+                      
+                          // 1. Try register
+                          try {
+                            await API.post("/auth/register", {
+                              name: "User",
+                              email,
+                              password,
+                            });
+                          } catch (e) {
+                            console.log("User may already exist, continuing...");
+                          }
+                      
+                          // 2. ALWAYS login after
+                          const res: any = await API.post("/auth/login", {
+                            email,
+                            password,
+                          });
+                      
+                          localStorage.setItem("token", res.data.token);
+                      
+                          onLogin();
+                        } catch (err: any) {
+                          console.error(err);
+                          alert("Signup/Login failed");
+                        }
+                      }}
                         className="w-full bg-gradient-to-r from-orange-500 to-cyan-400 hover:from-orange-600 hover:to-cyan-500 text-white rounded-xl py-3 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         Create Account
