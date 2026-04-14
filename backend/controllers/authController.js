@@ -3,8 +3,8 @@ import { ApiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateToken } from "../utils/generateToken.js";
-import { uploadBufferToCloudinary } from "../utils/uploadToCloudinary.js";
 
+// ✅ REGISTER
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -17,21 +17,12 @@ export const register = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Email is already registered.");
   }
 
-  let avatar = "";
-  if (req.file) {
-    const uploaded = await uploadBufferToCloudinary(
-      req.file.buffer,
-      "civic-app/avatars",
-      req.file.mimetype
-    );
-    avatar = uploaded.secure_url;
-  }
-
+  // 🔥 Removed Cloudinary (was causing crash)
   const user = await User.create({
     name,
     email,
     password,
-    avatar
+    avatar: "" // fallback empty avatar
   });
 
   const token = generateToken(user._id);
@@ -53,6 +44,7 @@ export const register = asyncHandler(async (req, res) => {
   });
 });
 
+// ✅ LOGIN
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
